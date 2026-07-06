@@ -14,6 +14,7 @@
  */
 
 #include <behaviors.dtsi>
+#include <behaviors/nicola.dtsi>
 #include <dt-bindings/zmk/bt.h>
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/outputs.h>
@@ -107,7 +108,7 @@
 &kp TAB          &kp Q     &kp W     &kp E            &kp R           &kp T                              &kp Y      &kp U     &kp I      &kp O      &kp P      &kp LBKT
 &kp BSPC         &kp A     &kp S     &kp D            &kp F           &kp G                              &kp H      &kp J     &kp K      &kp L      &kp SEMI   &kp ENTER
 &osf LSHFT LSHFT &kp Z     &kp X     &kp C            &kp V           &kp B      &kp C_MUTE  &mkp MCLK   &kp N      &kp M     &kp COMMA  &kp DOT    &kp FSLH   &kp DEL
-&td_esc_win      &kp RALT  &kp LALT  &oct LCTRL LCTRL &kp SPACE       &tt_num 1 1                        &msl 2 2   &kp INT4  &kp INT4   &kp GRAVE  &to 3      &kp PSCRN
+&td_esc_win      &kp RALT  &kp LALT  &oct LCTRL LCTRL &kp SPACE       &tt_num 1 1                        &msl 2 2   &kp INT4  &tog 5     &kp GRAVE  &to 3      &kp PSCRN
             >;
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &scroll_enc>;
         };
@@ -165,6 +166,20 @@
 &kp BSPC         &kp A     &kp S     &kp D       &kp F       &kp G                              &kp H      &kp J     &kp K      &kp L        &kp SEMI   &kp ENTER
 &kp LSHFT        &kp Z     &kp X     &kp C       &kp V       &kp B       &kp C_MUTE  &mkp MCLK  &kp N      &kp M     &kp COMMA  &kp DOT      &kp FSLH   &kp DEL
 &kp LCTRL        &none     &kp LALT  &kp LGUI    &kp SPACE   &to 0                              &none      &none     &none      &kp CAPS     &none      &none
+            >;
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &scroll_enc>;
+        };
+
+        nicola_layer {
+            display-name = "NICOLA";
+            // 親指シフト。文字キーは &nc、左親指シフト=&nc SPACE、右親指シフト=&nc INT4
+            // Tab/BSpace/Enter/Delete/レイヤーキー等は &trans でベースのまま
+            // 解除は右親指の &tog 5 (ベースと同位置、&trans 経由)
+            bindings = <
+&trans           &nc Q     &nc W     &nc E       &nc R       &nc T                              &nc Y      &nc U     &nc I      &nc O      &nc P      &trans
+&trans           &nc A     &nc S     &nc D       &nc F       &nc G                              &nc H      &nc J     &nc K      &nc L      &nc SEMI   &trans
+&trans           &nc Z     &nc X     &nc C       &nc V       &nc B       &trans      &trans     &nc N      &nc M     &nc COMMA  &nc DOT    &nc SLASH  &trans
+&trans           &trans    &trans    &trans      &nc SPACE   &trans                             &trans     &nc INT4  &trans     &trans     &trans     &trans
             >;
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &scroll_enc>;
         };
