@@ -2,11 +2,13 @@ name: Build ZMK firmware
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
+      - oyayubi
     paths:
-      - "boards/*"
-      - "config/*"
-    tags-ignore:
-      - "*"
+      - "boards/**"
+      - "config/**"
+      - ".github/workflows/build.yml"
 
 jobs:
   build:
