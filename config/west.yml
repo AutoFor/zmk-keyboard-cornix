@@ -28,10 +28,11 @@ manifest:
       remote: AutoFor
       revision: main
       clone-depth: 1
-    #- name: zmk-rgbled-widget
-    #  remote: hitsmaxft
-    #  revision: main
-    #  clone-depth: 1
+    # ステータスLED表示 (cornix_indicator シールドが使用)
+    - name: zmk-rgbled-widget
+      remote: hitsmaxft
+      revision: main
+      clone-depth: 1
     - name: zmk-dongle-display
       remote: englmaxi
       revision: main
