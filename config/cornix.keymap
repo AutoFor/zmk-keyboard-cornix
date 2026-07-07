@@ -100,14 +100,26 @@
             bindings = <&kp ESC>, <&kp LGUI>;
         };
 
-        // NICOLA切替キー: tap=NICOLAレイヤー切替+IME連動(半角/全角),
-        //                 double-tap=レイヤー切替のみ(IMEには触らない)
-        td_nicola: td_nicola {
+        // NICOLA切替キー(確定方向方式)。Windows側で
+        // 「変換キー=IMEオン / 無変換キー=IMEオフ」設定が前提。
+        // トグルではなく方向確定なので、ウィンドウ切替等でIMEがズレていても
+        // 次の切替で必ず同期が回復する。
+        // Base側: tap=IMEオン+NICOLAへ, double-tap=レイヤー移動のみ
+        td_nicola_on: td_nicola_on {
             compatible = "zmk,behavior-tap-dance";
             #binding-cells = <0>;
-            display-name = "親";
+            display-name = "親ON";
             tapping-term-ms = <200>;
-            bindings = <&nicola_tog>, <&tog L_NICOLA>;
+            bindings = <&nicola_on>, <&to L_NICOLA>;
+        };
+
+        // NICOLA側: tap=IMEオフ+Baseへ, double-tap=レイヤー移動のみ
+        td_nicola_off: td_nicola_off {
+            compatible = "zmk,behavior-tap-dance";
+            #binding-cells = <0>;
+            display-name = "親OFF";
+            tapping-term-ms = <200>;
+            bindings = <&nicola_off>, <&to L_BASE>;
         };
 
         // エンコーダ2: マウスホイール
@@ -126,12 +138,18 @@
             bindings = <&kp T &kp E>;
         };
 
-        // NICOLA切替+IME連動: 半角/全角(IMEトグル)を送ってからNICOLAレイヤーをトグル
-        // (NICOLAに入る=IMEオン / Baseに戻る=IMEオフ、と同期する想定)
-        nicola_tog: nicola_tog {
+        // NICOLA開始: 変換(=IMEオン確定) → NICOLAレイヤーへ
+        nicola_on: nicola_on {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp GRAVE>, <&tog L_NICOLA>;
+            bindings = <&kp INT4>, <&to L_NICOLA>;
+        };
+
+        // NICOLA終了: 無変換(=IMEオフ確定) → Baseへ
+        nicola_off: nicola_off {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp INT5>, <&to L_BASE>;
         };
 
     };
@@ -156,12 +174,12 @@
             // Tab    Q    W    E    R    T              Y    U    I    O    P    @[
             // BSpc   A    S    D    F    G              H    J    K    L    ;    Enter
             // Sft*   Z    X    C    V    B  Mute  MClk  N    M    ,    .    /    Del
-            // Esc/Win RAlt LAlt Ctl* Spc  L1*   L2* 変換  全角  NICOLA切替(2タップ=全角)  TO3  PrtSc
+            // Esc/Win RAlt LAlt Ctl* Spc  L1*   L2* 変換  全角  親ON(2タップ=移動のみ)  TO_Fn  PrtSc
             bindings = <
 &kp TAB          &kp Q     &kp W     &kp E            &kp R           &kp T                              &kp Y      &kp U     &kp I      &kp O      &kp P      &kp LBKT
 &kp BSPC         &kp A     &kp S     &kp D            &kp F           &kp G                              &kp H      &kp J     &kp K      &kp L      &kp SEMI   &kp ENTER
 &osf LSHFT LSHFT &kp Z     &kp X     &kp C            &kp V           &kp B      &kp C_MUTE  &mkp MCLK   &kp N      &kp M     &kp COMMA  &kp DOT    &kp FSLH   &kp DEL
-&td_esc_win      &kp RALT  &kp LALT  &oct LCTRL LCTRL &kp SPACE       &tt_num L_NUM L_NUM                &msl L_SYM L_SYM &kp INT4 &kp GRAVE &td_nicola &to L_FN &kp PSCRN
+&td_esc_win      &kp RALT  &kp LALT  &oct LCTRL LCTRL &kp SPACE       &tt_num L_NUM L_NUM                &msl L_SYM L_SYM &kp INT4 &kp GRAVE &td_nicola_on &to L_FN &kp PSCRN
             >;
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &scroll_enc>;
         };
@@ -173,12 +191,12 @@
             // @キー(P右隣)は NICOLA-J規格どおり単独=、(読点)
             // Tab/BSpace/Enter/Delete/レイヤーキー等は &trans でベースのまま
             // (レイヤー1に配置: NumNav/Symbol/Fnが上に重なるためL1/L2キーもBase同様に効く)
-            // 解除は右親指の &td_nicola (ベースと同位置、&trans 経由。tap=解除+IMEオフ, 2タップ=解除のみ)
+            // 解除は右親指の &td_nicola_off (Baseの親ONと同位置。tap=IMEオフ+Baseへ, 2タップ=移動のみ)
             bindings = <
 &trans           &nc Q     &nc W     &nc E       &nc R       &nc T                              &nc Y      &nc U     &nc I      &nc O      &nc P      &nc LBKT
 &trans           &nc A     &nc S     &nc D       &nc F       &nc G                              &nc H      &nc J     &nc K      &nc L      &nc SEMI   &trans
 &trans           &nc Z     &nc X     &nc C       &nc V       &nc B       &trans      &trans     &nc N      &nc M     &nc COMMA  &nc DOT    &nc SLASH  &trans
-&trans           &trans    &trans    &trans      &nc NICOLA_LTHUMB &trans                       &trans     &nc NICOLA_RTHUMB &trans &trans   &trans     &trans
+&trans           &trans    &trans    &trans      &nc NICOLA_LTHUMB &trans                       &trans     &nc NICOLA_RTHUMB &trans &td_nicola_off &trans &trans
             >;
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &scroll_enc>;
         };

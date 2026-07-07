@@ -31,6 +31,12 @@ include:
     snippet: studio-rpc-usb-uart
     artifact-name: cornix_left_default_nosd
 
+  # デバッグ用: USBシリアルにログを出す左手ビルド (flash-cornix.ps1 -DebugFw で書き込み)
+  - board: cornix_left
+    shield: cornix_indicator
+    snippet: zmk-usb-logging
+    artifact-name: cornix_left_debug_nosd
+
   - board: cornix_ph_left
     # shield: cornix_indicator
     artifact-name: cornix_left_for_dongle_nosd
