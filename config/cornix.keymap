@@ -81,6 +81,13 @@
             #binding-cells = <0>;
             bindings = <&kp T &kp E>;
         };
+
+        // NICOLA切替: 半角/全角(IMEトグル) + レイヤー5トグルを1打で
+        nicola_tog: nicola_tog {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp GRAVE>, <&tog 5>;
+        };
     };
 
     combos {
@@ -103,12 +110,12 @@
             // Tab    Q    W    E    R    T              Y    U    I    O    P    @[
             // BSpc   A    S    D    F    G              H    J    K    L    ;    Enter
             // Sft*   Z    X    C    V    B  Mute  MClk  N    M    ,    .    /    Del
-            // Esc/Win RAlt LAlt Ctl* Spc  L1*   L2* 変換  変換  全角 TO3  PrtSc
+            // Esc/Win RAlt LAlt Ctl* Spc  L1*   L2* 変換  NICOLA切替(+IME)  全角 TO3  PrtSc
             bindings = <
 &kp TAB          &kp Q     &kp W     &kp E            &kp R           &kp T                              &kp Y      &kp U     &kp I      &kp O      &kp P      &kp LBKT
 &kp BSPC         &kp A     &kp S     &kp D            &kp F           &kp G                              &kp H      &kp J     &kp K      &kp L      &kp SEMI   &kp ENTER
 &osf LSHFT LSHFT &kp Z     &kp X     &kp C            &kp V           &kp B      &kp C_MUTE  &mkp MCLK   &kp N      &kp M     &kp COMMA  &kp DOT    &kp FSLH   &kp DEL
-&td_esc_win      &kp RALT  &kp LALT  &oct LCTRL LCTRL &kp SPACE       &tt_num 1 1                        &msl 2 2   &kp INT4  &tog 5     &kp GRAVE  &to 3      &kp PSCRN
+&td_esc_win      &kp RALT  &kp LALT  &oct LCTRL LCTRL &kp SPACE       &tt_num 1 1                        &msl 2 2   &kp INT4  &nicola_tog &kp GRAVE &to 3      &kp PSCRN
             >;
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &scroll_enc>;
         };
@@ -174,7 +181,7 @@
             display-name = "NICOLA";
             // 親指シフト。文字キーは &nc、左親指シフト=&nc SPACE、右親指シフト=&nc INT4
             // Tab/BSpace/Enter/Delete/レイヤーキー等は &trans でベースのまま
-            // 解除は右親指の &tog 5 (ベースと同位置、&trans 経由)
+            // 解除は右親指の &nicola_tog (ベースと同位置、&trans 経由。IMEトグルも同時送出)
             bindings = <
 &trans           &nc Q     &nc W     &nc E       &nc R       &nc T                              &nc Y      &nc U     &nc I      &nc O      &nc P      &trans
 &trans           &nc A     &nc S     &nc D       &nc F       &nc G                              &nc H      &nc J     &nc K      &nc L      &nc SEMI   &trans
