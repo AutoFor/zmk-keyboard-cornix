@@ -20,11 +20,15 @@
 #include <dt-bindings/zmk/outputs.h>
 #include <dt-bindings/zmk/pointing.h>
 
-// 親指シフトが同時打鍵と判定される時間範囲 (1〜100%、やまぶきRと同方式)。
-// 文字キーの押下0〜離す(or次キー)100のうち、前半◯%以内に親指キーが押されたら同時打鍵。
-// 打鍵感の調整はここを変えて push → flash-cornix.ps1
+// 親指シフトの設定。変更したら push → flash-cornix.ps1
+// - range-pct: 同時打鍵と判定される時間範囲 (1〜100%、やまぶきRと同方式)。
+//   文字キーの押下0〜離す(or次キー)100のうち、前半◯%以内に親指キーが押されたら同時打鍵
+// - left-thumb / right-thumb: 親指シフトキー。変更時はNICOLAレイヤーの
+//   &nc SPACE / &nc INT4 も同じキーコードに合わせること
 &nc {
     range-pct = <65>;
+    left-thumb = <SPACE>;
+    right-thumb = <INT4>;
 };
 
 / {
