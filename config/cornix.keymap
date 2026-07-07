@@ -27,7 +27,7 @@
 //   main      = 固定ms窓・先判定 (NICOLA_TIMEOUT_MS が有効)
 //   range-pct = やまぶきR風%・後判定 (NICOLA_RANGE_PCT が有効)
 // 両方定義してあるのでブランチを切り替えてもこのファイルはそのまま使える
-#define NICOLA_TIMEOUT_MS 130  // 同時打鍵判定窓 (ms) — mainブランチ用
+#define NICOLA_TIMEOUT_MS 100  // 同時打鍵判定窓 (ms) — mainブランチ用
 #define NICOLA_RANGE_PCT 65    // 同時打鍵判定範囲 (%) — range-pctブランチ用
 // 親指シフトキー (キーマップ内の全該当箇所に自動反映される)
 #define NICOLA_LTHUMB SPACE  // 左親指シフト (単独タップはこのキー自身)
