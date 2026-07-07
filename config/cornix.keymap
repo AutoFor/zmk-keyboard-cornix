@@ -90,13 +90,13 @@
         };
 
         // NICOLA切替キー: tap=NICOLAレイヤー切替+IME連動(半角/全角),
-        //                 double-tap=半角/全角のみ(IMEがズレたときの補正用)
+        //                 double-tap=レイヤー切替のみ(IMEには触らない)
         td_nicola: td_nicola {
             compatible = "zmk,behavior-tap-dance";
             #binding-cells = <0>;
             display-name = "親";
             tapping-term-ms = <200>;
-            bindings = <&nicola_tog>, <&kp GRAVE>;
+            bindings = <&nicola_tog>, <&tog 5>;
         };
 
         // エンコーダ2: マウスホイール
@@ -218,7 +218,7 @@
             // NICOLA_LTHUMB / NICOLA_RTHUMB 定義が自動反映される
             // @キー(P右隣)は NICOLA-J規格どおり単独=、(読点)
             // Tab/BSpace/Enter/Delete/レイヤーキー等は &trans でベースのまま
-            // 解除は右親指の &td_nicola (ベースと同位置、&trans 経由。tap=解除+IMEオフ, 2タップ=全角のみ)
+            // 解除は右親指の &td_nicola (ベースと同位置、&trans 経由。tap=解除+IMEオフ, 2タップ=解除のみ)
             bindings = <
 &trans           &nc Q     &nc W     &nc E       &nc R       &nc T                              &nc Y      &nc U     &nc I      &nc O      &nc P      &nc LBKT
 &trans           &nc A     &nc S     &nc D       &nc F       &nc G                              &nc H      &nc J     &nc K      &nc L      &nc SEMI   &trans
