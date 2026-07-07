@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - oyayubi
+      - oyayubi-pct
     paths:
       - "boards/**"
       - "config/**"
