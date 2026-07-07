@@ -23,15 +23,19 @@
 // ============================================================
 // 親指シフト(NICOLA)の設定はここだけ変えればOK。変更後 push → flash-cornix.ps1
 // ============================================================
-// 同時打鍵判定窓 (ms)。文字キー→親指キーがこの時間以内なら同時打鍵。
-// 親指キー押下の瞬間に判定・即出力。親指先行の連続シフトには無関係
-#define NICOLA_TIMEOUT_MS 130
+// 判定方式は zmk-nicola のブランチで切替 (config/west.yml の zmk-nicola revision):
+//   main      = 固定ms窓・先判定 (NICOLA_TIMEOUT_MS が有効)
+//   range-pct = やまぶきR風%・後判定 (NICOLA_RANGE_PCT が有効)
+// 両方定義してあるのでブランチを切り替えてもこのファイルはそのまま使える
+#define NICOLA_TIMEOUT_MS 130  // 同時打鍵判定窓 (ms) — mainブランチ用
+#define NICOLA_RANGE_PCT 65    // 同時打鍵判定範囲 (%) — range-pctブランチ用
 // 親指シフトキー (キーマップ内の全該当箇所に自動反映される)
 #define NICOLA_LTHUMB SPACE  // 左親指シフト (単独タップはこのキー自身)
 #define NICOLA_RTHUMB INT4   // 右親指シフト (INT4=変換)
 
 &nc {
     timeout-ms = <NICOLA_TIMEOUT_MS>;
+    range-pct = <NICOLA_RANGE_PCT>;
     left-thumb = <NICOLA_LTHUMB>;
     right-thumb = <NICOLA_RTHUMB>;
 };
