@@ -29,6 +29,8 @@
 // 両方定義してあるのでブランチを切り替えてもこのファイルはそのまま使える
 #define NICOLA_TIMEOUT_MS 100  // 同時打鍵判定窓 (ms) — mainブランチ用
 #define NICOLA_RANGE_PCT 65    // 同時打鍵判定範囲 (%) — range-pctブランチ用
+// 連続シフト: 親指を押しっぱなしで後続の文字にもシフトをかけ続ける (1=オン, 0=オフ)
+#define NICOLA_CONTINUOUS 0
 // 親指シフトキー (キーマップ内の全該当箇所に自動反映される)
 #define NICOLA_LTHUMB SPACE  // 左親指シフト (単独タップはこのキー自身)
 #define NICOLA_RTHUMB INT4   // 右親指シフト (INT4=変換)
@@ -36,6 +38,7 @@
 &nc {
     timeout-ms = <NICOLA_TIMEOUT_MS>;
     range-pct = <NICOLA_RANGE_PCT>;
+    continuous-shift = <NICOLA_CONTINUOUS>;
     left-thumb = <NICOLA_LTHUMB>;
     right-thumb = <NICOLA_RTHUMB>;
 };
