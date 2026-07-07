@@ -2,7 +2,9 @@
  * Cornix keymap — Vial (keymap-20260706-203100.vil) からの移植
  * マスター: AutoFor/cornix-oyayubi docs/keymap/README.md
  *
- * レイヤー: 0=Base 1=Num/Nav 2=Symbol 3=Fn 4=Plain
+ * レイヤー: 0=Base 1=NICOLA 2=Num/Nav 3=Symbol 4=Fn 5=Plain
+ *   (NICOLAを低番号に置き、NICOLA中でもL1/L2等のレイヤーキーが上に重なって
+ *    Baseと同じように機能する。番号は下の L_* define で管理)
  * Vialタップダンス対応:
  *   TD(0) tap TO(1)/hold MO(1)      -> &tt_num (hold-tap: mo/to)
  *   TD(1) tap OSL(2)/hold MO(2)     -> &msl    (hold-tap: mo/sl) ※double-tap TO(2)は未移植
@@ -34,6 +36,15 @@
 // 親指シフトキー (キーマップ内の全該当箇所に自動反映される)
 #define NICOLA_LTHUMB SPACE  // 左親指シフト (単独タップはこのキー自身)
 #define NICOLA_RTHUMB INT4   // 右親指シフト (INT4=変換)
+
+// レイヤー番号。NICOLAを低番号に置くことで、NICOLA中でもレイヤーキーが
+// 上に重なりBaseと同じように機能する(キーマップ内はこのdefineを使うこと)
+#define L_BASE   0
+#define L_NICOLA 1
+#define L_NUM    2
+#define L_SYM    3
+#define L_FN     4
+#define L_PLAIN  5
 
 &nc {
     timeout-ms = <NICOLA_TIMEOUT_MS>;
@@ -96,7 +107,7 @@
             #binding-cells = <0>;
             display-name = "親";
             tapping-term-ms = <200>;
-            bindings = <&nicola_tog>, <&tog 5>;
+            bindings = <&nicola_tog>, <&tog L_NICOLA>;
         };
 
         // エンコーダ2: マウスホイール
@@ -115,12 +126,12 @@
             bindings = <&kp T &kp E>;
         };
 
-        // NICOLA切替+IME連動: 半角/全角(IMEトグル)を送ってからレイヤー5をトグル
+        // NICOLA切替+IME連動: 半角/全角(IMEトグル)を送ってからNICOLAレイヤーをトグル
         // (NICOLAに入る=IMEオン / Baseに戻る=IMEオフ、と同期する想定)
         nicola_tog: nicola_tog {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp GRAVE>, <&tog 5>;
+            bindings = <&kp GRAVE>, <&tog L_NICOLA>;
         };
 
     };
@@ -128,11 +139,11 @@
     combos {
         compatible = "zmk,combos";
 
-        // Vial combo: LAlt + Esc -> M5("te")
+        // Vial combo: LAlt + Esc -> M5("te") (NICOLA中もBase同様に有効)
         combo_te {
             bindings = <&macro_te>;
             key-positions = <38 40>;
-            layers = <0>;
+            layers = <L_BASE L_NICOLA>;
         };
     };
 
@@ -150,7 +161,24 @@
 &kp TAB          &kp Q     &kp W     &kp E            &kp R           &kp T                              &kp Y      &kp U     &kp I      &kp O      &kp P      &kp LBKT
 &kp BSPC         &kp A     &kp S     &kp D            &kp F           &kp G                              &kp H      &kp J     &kp K      &kp L      &kp SEMI   &kp ENTER
 &osf LSHFT LSHFT &kp Z     &kp X     &kp C            &kp V           &kp B      &kp C_MUTE  &mkp MCLK   &kp N      &kp M     &kp COMMA  &kp DOT    &kp FSLH   &kp DEL
-&td_esc_win      &kp RALT  &kp LALT  &oct LCTRL LCTRL &kp SPACE       &tt_num 1 1                        &msl 2 2   &kp INT4  &kp GRAVE  &td_nicola &to 3      &kp PSCRN
+&td_esc_win      &kp RALT  &kp LALT  &oct LCTRL LCTRL &kp SPACE       &tt_num L_NUM L_NUM                &msl L_SYM L_SYM &kp INT4 &kp GRAVE &td_nicola &to L_FN &kp PSCRN
+            >;
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &scroll_enc>;
+        };
+
+        nicola_layer {
+            display-name = "NICOLA";
+            // 親指シフト。文字キーは &nc、親指シフトキーはファイル冒頭の
+            // NICOLA_LTHUMB / NICOLA_RTHUMB 定義が自動反映される
+            // @キー(P右隣)は NICOLA-J規格どおり単独=、(読点)
+            // Tab/BSpace/Enter/Delete/レイヤーキー等は &trans でベースのまま
+            // (レイヤー1に配置: NumNav/Symbol/Fnが上に重なるためL1/L2キーもBase同様に効く)
+            // 解除は右親指の &td_nicola (ベースと同位置、&trans 経由。tap=解除+IMEオフ, 2タップ=解除のみ)
+            bindings = <
+&trans           &nc Q     &nc W     &nc E       &nc R       &nc T                              &nc Y      &nc U     &nc I      &nc O      &nc P      &nc LBKT
+&trans           &nc A     &nc S     &nc D       &nc F       &nc G                              &nc H      &nc J     &nc K      &nc L      &nc SEMI   &trans
+&trans           &nc Z     &nc X     &nc C       &nc V       &nc B       &trans      &trans     &nc N      &nc M     &nc COMMA  &nc DOT    &nc SLASH  &trans
+&trans           &trans    &trans    &trans      &nc NICOLA_LTHUMB &trans                       &trans     &nc NICOLA_RTHUMB &trans &trans   &trans     &trans
             >;
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &scroll_enc>;
         };
@@ -165,7 +193,7 @@
 &kp ESC          &kp N1    &kp N2    &kp N3      &kp N4      &kp N5                             &kp N6     &kp N7     &kp N8     &kp N9     &kp N0        &kp MINUS
 &kp BSPC         &none     &kp F2    &kp INT3    &kp SQT     &kp MINUS                          &kp LEFT   &kp DOWN   &kp UP     &kp RIGHT  &kp LS(SEMI)  &kp ENTER
 &osf LSHFT LSHFT &none     &none     &none       &kp LS(N7)  &kp LS(N2)  &kp C_MUTE  &mkp MCLK  &kp HOME   &kp PG_DN  &kp PG_UP  &kp END    &none         &kp LS(INT1)
-&td_esc_win      &none     &kp LALT  &kp LCTRL   &kp SPACE   &to 0                              &sk LGUI   &to 4      &none      &none      &none         &none
+&td_esc_win      &none     &kp LALT  &kp LCTRL   &kp SPACE   &to L_BASE                         &sk LGUI   &to L_PLAIN &none     &none      &none         &none
             >;
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &scroll_enc>;
         };
@@ -177,10 +205,10 @@
             // Sft*   --   --   --   --   --             }    ~    --   --   --   --
             // Esc/Win --   --  LCtrl --  TO0            --   --   --  BT0  BT1  BT2
             bindings = <
-&none            &none     &none     &to 0       &none       &none                              &none            &none                &kp LS(N8)  &kp LS(N9)    &none         &none
+&none            &none     &none     &to L_BASE  &none       &none                              &none            &none                &kp LS(N8)  &kp LS(N9)    &none         &none
 &none            &none     &none     &none       &none       &none                              &kp RBKT         &kp NON_US_HASH      &none       &none         &none         &none
 &osf LSHFT LSHFT &none     &none     &none       &none       &none       &kp C_MUTE  &mkp MCLK  &kp LS(RBKT)     &kp LS(NON_US_HASH)  &none       &none         &none         &none
-&td_esc_win      &none     &none     &kp LCTRL   &none       &to 0                              &none            &none                &none       &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2
+&td_esc_win      &none     &none     &kp LCTRL   &none       &to L_BASE                         &none            &none                &none       &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2
             >;
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &scroll_enc>;
         };
@@ -195,7 +223,7 @@
 &none            &kp F1    &kp F2    &kp F3      &kp F4      &kp F5                             &bt BT_CLR  &out OUT_USB  &out OUT_BLE  &none      &none      &none
 &none            &kp F6    &kp F7    &kp F8      &kp F9      &kp F10                            &none       &none         &none         &none      &none      &none
 &none            &none     &none     &none       &kp F11     &kp F12     &kp C_MUTE  &mkp MCLK  &none       &none         &none         &none      &none      &none
-&none            &none     &kp LALT  &none       &none       &to 0                              &none       &none         &none         &none      &none      &none
+&none            &none     &kp LALT  &none       &none       &to L_BASE                         &none       &none         &none         &none      &none      &none
             >;
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &scroll_enc>;
         };
@@ -207,23 +235,7 @@
 &kp TAB          &kp Q     &kp W     &kp E       &kp R       &kp T                              &kp Y      &kp U     &kp I      &kp O        &kp P      &kp LBKT
 &kp BSPC         &kp A     &kp S     &kp D       &kp F       &kp G                              &kp H      &kp J     &kp K      &kp L        &kp SEMI   &kp ENTER
 &kp LSHFT        &kp Z     &kp X     &kp C       &kp V       &kp B       &kp C_MUTE  &mkp MCLK  &kp N      &kp M     &kp COMMA  &kp DOT      &kp FSLH   &kp DEL
-&kp LCTRL        &none     &kp LALT  &kp LGUI    &kp SPACE   &to 0                              &none      &none     &none      &kp CAPS     &none      &none
-            >;
-            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &scroll_enc>;
-        };
-
-        nicola_layer {
-            display-name = "NICOLA";
-            // 親指シフト。文字キーは &nc、親指シフトキーはファイル冒頭の
-            // NICOLA_LTHUMB / NICOLA_RTHUMB 定義が自動反映される
-            // @キー(P右隣)は NICOLA-J規格どおり単独=、(読点)
-            // Tab/BSpace/Enter/Delete/レイヤーキー等は &trans でベースのまま
-            // 解除は右親指の &td_nicola (ベースと同位置、&trans 経由。tap=解除+IMEオフ, 2タップ=解除のみ)
-            bindings = <
-&trans           &nc Q     &nc W     &nc E       &nc R       &nc T                              &nc Y      &nc U     &nc I      &nc O      &nc P      &nc LBKT
-&trans           &nc A     &nc S     &nc D       &nc F       &nc G                              &nc H      &nc J     &nc K      &nc L      &nc SEMI   &trans
-&trans           &nc Z     &nc X     &nc C       &nc V       &nc B       &trans      &trans     &nc N      &nc M     &nc COMMA  &nc DOT    &nc SLASH  &trans
-&trans           &trans    &trans    &trans      &nc NICOLA_LTHUMB &trans                       &trans     &nc NICOLA_RTHUMB &trans &trans   &trans     &trans
+&kp LCTRL        &none     &kp LALT  &kp LGUI    &kp SPACE   &to L_BASE                         &none      &none     &none      &kp CAPS     &none      &none
             >;
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &scroll_enc>;
         };
