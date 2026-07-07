@@ -122,12 +122,12 @@
             // Tab    Q    W    E    R    T              Y    U    I    O    P    @[
             // BSpc   A    S    D    F    G              H    J    K    L    ;    Enter
             // Sft*   Z    X    C    V    B  Mute  MClk  N    M    ,    .    /    Del
-            // Esc/Win RAlt LAlt Ctl* Spc  L1*   L2* 変換  NICOLA切替(+IME)  全角 TO3  PrtSc
+            // Esc/Win RAlt LAlt Ctl* Spc  L1*   L2* 変換  全角  NICOLA切替(+IME)  TO3  PrtSc
             bindings = <
 &kp TAB          &kp Q     &kp W     &kp E            &kp R           &kp T                              &kp Y      &kp U     &kp I      &kp O      &kp P      &kp LBKT
 &kp BSPC         &kp A     &kp S     &kp D            &kp F           &kp G                              &kp H      &kp J     &kp K      &kp L      &kp SEMI   &kp ENTER
 &osf LSHFT LSHFT &kp Z     &kp X     &kp C            &kp V           &kp B      &kp C_MUTE  &mkp MCLK   &kp N      &kp M     &kp COMMA  &kp DOT    &kp FSLH   &kp DEL
-&td_esc_win      &kp RALT  &kp LALT  &oct LCTRL LCTRL &kp SPACE       &tt_num 1 1                        &msl 2 2   &kp INT4  &nicola_tog &kp GRAVE &to 3      &kp PSCRN
+&td_esc_win      &kp RALT  &kp LALT  &oct LCTRL LCTRL &kp SPACE       &tt_num 1 1                        &msl 2 2   &kp INT4  &kp GRAVE  &nicola_tog &to 3     &kp PSCRN
             >;
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &scroll_enc>;
         };
