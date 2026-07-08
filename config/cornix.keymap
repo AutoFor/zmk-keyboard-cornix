@@ -29,7 +29,9 @@
 //   main      = 固定ms窓・先判定 (NICOLA_TIMEOUT_MS が有効)
 //   range-pct = やまぶきR風%・後判定 (NICOLA_RANGE_PCT が有効)
 // 両方定義してあるのでブランチを切り替えてもこのファイルはそのまま使える
-#define NICOLA_TIMEOUT_MS 100  // 同時打鍵判定窓 (ms) — mainブランチ用
+// 2026-07-08 ログ実測: 意図した同時打鍵は全て34ms以内、誤爆(ロールオーバー)は67ms
+// → 中間の50msに設定 (以前は100msで広すぎた)
+#define NICOLA_TIMEOUT_MS 50   // 同時打鍵判定窓 (ms) — mainブランチ用
 #define NICOLA_RANGE_PCT 65    // 同時打鍵判定範囲 (%) — range-pctブランチ用
 // 連続シフト: 親指を押しっぱなしで後続の文字にもシフトをかけ続ける (1=オン, 0=オフ)
 #define NICOLA_CONTINUOUS 0
