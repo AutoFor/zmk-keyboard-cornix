@@ -89,10 +89,13 @@
 
   <div class="card">
     <h2>同時打鍵の判定</h2>
-    <p class="hint" style="margin:0 0 14px">方式は<b>書き込んだファームのブランチで決まります</b>（ページからは切替不可）:
-    通常の <code>.\flash-cornix.ps1</code> = <b>ms方式</b> ／
-    <code>.\flash-cornix.ps1 -Branch oyayubi-pct</code> = <b>%方式</b>。
-    USB接続すると現在の方式を自動判別して表示します。</p>
+    <div class="row" id="modeRow" style="display:none">
+      <label>判定方式</label>
+      <label class="toggle" style="font-weight:400"><input type="radio" name="ncmode" value="0" id="modeMs"> ms方式（固定窓・即出力）</label>
+      <label class="toggle" style="font-weight:400"><input type="radio" name="ncmode" value="1" id="modePct"> %方式（やまぶきR正本・後判定）</label>
+    </div>
+    <p class="hint" id="modeHint" style="margin:0 0 14px">USB接続すると判定方式をここで切り替えられます
+    （2026-07-08夜以降のファーム。即時反映・保存）。それ以前のファームでは方式はブランチ固定です。</p>
     <div id="methodInfo" style="display:none; font-size:13px; font-weight:700; margin-bottom:12px"></div>
     <div class="row">
       <label style="flex-basis:100%">判定窓 <span class="hint">ms方式（現在の運用）。文字キー→親指キーがこの時間以内なら同時打鍵</span></label>
@@ -277,6 +280,8 @@ function usbResetUi(msg) {
   $("logToggle").checked = false;
   $("usbLog").style.display = "none";
   $("methodInfo").style.display = "none";
+  $("modeRow").style.display = "none";
+  $("modeHint").style.display = "block";
   setControlsEnabled("timeout", true);
   setControlsEnabled("rangePct", true);
 }
@@ -302,24 +307,34 @@ function setControlsEnabled(prefix, on) {
 }
 
 function usbApplyResponse(line) {
-  // "ok timeout=50 range=-1 cont=0 log=0"
-  const m = line.match(/timeout=(-?\d+) range=(-?\d+) cont=([01])/);
+  // 新: "ok timeout=50 range=65 mode=0 cont=0 log=0" / 旧: mode無し・未使用側は-1
+  const m = line.match(/timeout=(-?\d+) range=(-?\d+)/);
   if (!m) return;
+  const modeM = line.match(/mode=([01])/);
+  const contM = line.match(/cont=([01])/);
   const info = $("methodInfo");
   info.style.display = "block";
-  if (m[1] !== "-1") { // ms方式ファーム
-    $("timeout").value = m[1]; $("timeout").oninput();
-    setControlsEnabled("timeout", true);
-    setControlsEnabled("rangePct", false);
-    info.innerHTML = '現在のファーム: <span class="ok">ms方式</span>（判定窓が有効。判定範囲%は無効化）';
+  if (m[1] !== "-1") { $("timeout").value = m[1]; $("timeout").oninput(); }
+  if (m[2] !== "-1") { $("rangePct").value = m[2]; $("rangePct").oninput(); }
+  if (modeM) { // 統合ファーム: 方式を実行時切替できる
+    const pct = modeM[1] === "1";
+    $("modeRow").style.display = "flex";
+    $("modeHint").style.display = "none";
+    (pct ? $("modePct") : $("modeMs")).checked = true;
+    setControlsEnabled("timeout", !pct);
+    setControlsEnabled("rangePct", pct);
+    info.innerHTML = '現在の方式: <span class="ok">' + (pct ? "%方式 (やまぶきR正本)" : "ms方式") +
+      '</span>（上のラジオボタンで切替できます）';
+  } else { // 旧ファーム: ブランチ固定
+    if (m[1] !== "-1") {
+      setControlsEnabled("timeout", true); setControlsEnabled("rangePct", false);
+      info.innerHTML = '現在のファーム: <span class="ok">ms方式</span>（旧ファーム: 方式切替には最新ファームが必要）';
+    } else {
+      setControlsEnabled("rangePct", true); setControlsEnabled("timeout", false);
+      info.innerHTML = '現在のファーム: <span class="ok">%方式</span>（旧ファーム: 方式切替には最新ファームが必要）';
+    }
   }
-  if (m[2] !== "-1") { // %方式ファーム
-    $("rangePct").value = m[2]; $("rangePct").oninput();
-    setControlsEnabled("rangePct", true);
-    setControlsEnabled("timeout", false);
-    info.innerHTML = '現在のファーム: <span class="ok">%方式 (やまぶきR風)</span>（判定範囲が有効。判定窓msは無効化）';
-  }
-  $("continuous").checked = m[3] === "1";
+  if (contM) $("continuous").checked = contM[1] === "1";
   $("usbState").innerHTML = '<span class="ok">✅ 反映・保存済み: ' + line.replace(/^ok /, "") + "</span>";
 }
 
@@ -384,6 +399,8 @@ $("timeoutNum").addEventListener("change", () => usbSend("set timeout " + $("tim
 $("rangePct").addEventListener("change", () => usbSend("set range " + $("rangePct").value));
 $("rangePctNum").addEventListener("change", () => usbSend("set range " + $("rangePctNum").value));
 $("continuous").addEventListener("change", () => usbSend("set cont " + ($("continuous").checked ? 1 : 0)));
+$("modeMs").addEventListener("change", () => usbSend("set mode 0"));
+$("modePct").addEventListener("change", () => usbSend("set mode 1"));
 $("logToggle").addEventListener("change", () => {
   const on = $("logToggle").checked;
   $("usbLog").style.display = on ? "block" : "none";
