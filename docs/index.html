@@ -253,7 +253,7 @@ async function saveBranch(branch, summary) {
 }
 
 // ---- USB直結モード (WebSerial) ----
-let usbPort = null, usbWriter = null, usbBuf = "";
+let usbPort = null, usbWriter = null, usbBuf = "", usbGotReply = false;
 
 async function usbSend(line) {
   if (!usbWriter) return;
@@ -280,8 +280,8 @@ async function usbReadLoop(reader) {
       while ((nl = usbBuf.indexOf("\n")) >= 0) {
         const line = usbBuf.slice(0, nl).trim();
         usbBuf = usbBuf.slice(nl + 1);
-        if (line.startsWith("ok")) usbApplyResponse(line);
-        else if (line.startsWith("err")) $("usbState").innerHTML = '<span class="err">' + line + "</span>";
+        if (line.startsWith("ok")) { usbGotReply = true; usbApplyResponse(line); }
+        else if (line.startsWith("err")) { usbGotReply = true; $("usbState").innerHTML = '<span class="err">' + line + "</span>"; }
       }
     }
   } catch (e) { /* 切断 */ }
@@ -300,7 +300,15 @@ $("usbBtn").onclick = async () => {
     usbReadLoop(usbPort.readable.getReader());
     $("usbBtn").textContent = "切断";
     $("usbState").textContent = "接続しました。現在値を取得中...";
+    usbGotReply = false;
     await usbSend("get");
+    setTimeout(() => {
+      if (!usbGotReply && usbPort) {
+        $("usbState").innerHTML = '<span class="err">応答がありません。①「切断」して再接続し、'
+          + '<b>別の「USB シリアル デバイス」</b>を選んでください（Studio用と設定用の2ポートがあります）'
+          + ' ②それでもダメなら今日以降のファームを書き込んでください (.\\flash-cornix.ps1)</span>';
+      }
+    }, 2500);
   } catch (e) {
     usbPort = null; usbWriter = null;
     $("usbState").innerHTML = '<span class="err">接続失敗: ' + e.message + "</span>";
