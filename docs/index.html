@@ -89,6 +89,11 @@
 
   <div class="card">
     <h2>同時打鍵の判定</h2>
+    <p class="hint" style="margin:0 0 14px">方式は<b>書き込んだファームのブランチで決まります</b>（ページからは切替不可）:
+    通常の <code>.\flash-cornix.ps1</code> = <b>ms方式</b> ／
+    <code>.\flash-cornix.ps1 -Branch oyayubi-pct</code> = <b>%方式</b>。
+    USB接続すると現在の方式を自動判別して表示します。</p>
+    <div id="methodInfo" style="display:none; font-size:13px; font-weight:700; margin-bottom:12px"></div>
     <div class="row">
       <label style="flex-basis:100%">判定窓 <span class="hint">ms方式（現在の運用）。文字キー→親指キーがこの時間以内なら同時打鍵</span></label>
       <input type="range" id="timeout" min="10" max="300" step="5">
@@ -271,6 +276,9 @@ function usbResetUi(msg) {
   $("logToggle").disabled = true;
   $("logToggle").checked = false;
   $("usbLog").style.display = "none";
+  $("methodInfo").style.display = "none";
+  setControlsEnabled("timeout", true);
+  setControlsEnabled("rangePct", true);
 }
 
 async function usbDisconnect() {
@@ -287,12 +295,30 @@ async function usbSend(line) {
   await usbWriter.write(new TextEncoder().encode(line + "\n"));
 }
 
+function setControlsEnabled(prefix, on) {
+  $(prefix).disabled = !on;
+  $(prefix + "Num").disabled = !on;
+  $(prefix).style.opacity = on ? 1 : 0.35;
+}
+
 function usbApplyResponse(line) {
-  // "ok timeout=50 range=-1 cont=0"
+  // "ok timeout=50 range=-1 cont=0 log=0"
   const m = line.match(/timeout=(-?\d+) range=(-?\d+) cont=([01])/);
   if (!m) return;
-  if (m[1] !== "-1") { $("timeout").value = m[1]; $("timeout").oninput(); }
-  if (m[2] !== "-1") { $("rangePct").value = m[2]; $("rangePct").oninput(); }
+  const info = $("methodInfo");
+  info.style.display = "block";
+  if (m[1] !== "-1") { // ms方式ファーム
+    $("timeout").value = m[1]; $("timeout").oninput();
+    setControlsEnabled("timeout", true);
+    setControlsEnabled("rangePct", false);
+    info.innerHTML = '現在のファーム: <span class="ok">ms方式</span>（判定窓が有効。判定範囲%は無効化）';
+  }
+  if (m[2] !== "-1") { // %方式ファーム
+    $("rangePct").value = m[2]; $("rangePct").oninput();
+    setControlsEnabled("rangePct", true);
+    setControlsEnabled("timeout", false);
+    info.innerHTML = '現在のファーム: <span class="ok">%方式 (やまぶきR風)</span>（判定範囲が有効。判定窓msは無効化）';
+  }
   $("continuous").checked = m[3] === "1";
   $("usbState").innerHTML = '<span class="ok">✅ 反映・保存済み: ' + line.replace(/^ok /, "") + "</span>";
 }
