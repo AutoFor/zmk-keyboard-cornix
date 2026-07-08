@@ -140,18 +140,23 @@
             bindings = <&kp T &kp E>;
         };
 
-        // NICOLA開始: 変換(=IMEオン確定) → NICOLAレイヤーへ
+        // NICOLA開始: レイヤー切替を先頭・待ち0msにして、直後の打鍵が旧レイヤーで
+        // 解釈される隙間(既定のwait/tapだと約45ms)をなくす。IMEキーはその後に送出
         nicola_on: nicola_on {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp INT4>, <&to L_NICOLA>;
+            wait-ms = <0>;
+            tap-ms = <10>;
+            bindings = <&to L_NICOLA>, <&kp INT4>; // NICOLAへ → 変換(=IMEオン確定)
         };
 
-        // NICOLA終了: 無変換(=IMEオフ確定) → Baseへ
+        // NICOLA終了: 同上
         nicola_off: nicola_off {
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp INT5>, <&to L_BASE>;
+            wait-ms = <0>;
+            tap-ms = <10>;
+            bindings = <&to L_BASE>, <&kp INT5>; // Baseへ → 無変換(=IMEオフ確定)
         };
 
     };
