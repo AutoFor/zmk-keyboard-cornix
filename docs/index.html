@@ -64,6 +64,13 @@
     <p class="hint">接続中はスライダーを動かすと<b>その場でキーボードに反映・保存</b>されます
     （判定窓/判定範囲/連続シフトのみ。親指キーの変更はGitHubモードで）。
     2026-07-08以降のファームが必要です。</p>
+    <div class="toggle" style="margin-top:12px">
+      <input type="checkbox" id="logToggle" disabled>
+      <span>動作ログを表示（同時打鍵の判定・出力かなをリアルタイム表示）</span>
+    </div>
+    <pre id="usbLog" style="display:none; max-height:220px; overflow-y:auto; background:var(--paper);
+      border:1px solid var(--edge); border-radius:8px; padding:10px 12px; font-size:12px;
+      line-height:1.6; margin:10px 0 0; white-space:pre-wrap;"></pre>
   </div>
 
   <div class="card">
@@ -137,7 +144,9 @@
       <input type="checkbox" id="alsoPct" checked>
       <span>%方式ブランチ (oyayubi-pct) にも同じ変更を反映する</span>
     </div>
-    <button class="primary" id="saveBtn" disabled>保存してビルド</button>
+    <button class="primary" id="saveBtn" disabled>保存してビルド（GitHubモード）</button>
+    <p class="hint">このボタンはGitHubモード専用です。上のトークンを入れて「現在の設定を読み込む」を
+    押すと有効になります。<b>USB直結モードでは不要</b>（スライダーを動かした時点で保存済み）。</p>
     <div id="status"></div>
   </div>
 
@@ -253,7 +262,7 @@ async function saveBranch(branch, summary) {
 }
 
 // ---- USB直結モード (WebSerial) ----
-let usbPort = null, usbWriter = null, usbBuf = "";
+let usbPort = null, usbWriter = null, usbBuf = "", usbGotReply = false;
 
 async function usbSend(line) {
   if (!usbWriter) return;
@@ -280,18 +289,31 @@ async function usbReadLoop(reader) {
       while ((nl = usbBuf.indexOf("\n")) >= 0) {
         const line = usbBuf.slice(0, nl).trim();
         usbBuf = usbBuf.slice(nl + 1);
-        if (line.startsWith("ok")) usbApplyResponse(line);
-        else if (line.startsWith("err")) $("usbState").innerHTML = '<span class="err">' + line + "</span>";
+        if (line.startsWith("ok")) { usbGotReply = true; usbApplyResponse(line); }
+        else if (line.startsWith("err")) { usbGotReply = true; $("usbState").innerHTML = '<span class="err">' + line + "</span>"; }
+        else if (line.startsWith("NC ")) {
+          const box = $("usbLog");
+          box.textContent += line + "\n";
+          if (box.textContent.length > 20000) box.textContent = box.textContent.slice(-15000);
+          box.scrollTop = box.scrollHeight;
+        }
       }
     }
   } catch (e) { /* 切断 */ }
   usbPort = null; usbWriter = null;
   $("usbBtn").textContent = "USBで接続";
   $("usbState").textContent = "切断されました";
+  $("logToggle").disabled = true;
+  $("logToggle").checked = false;
+  $("usbLog").style.display = "none";
 }
 
 $("usbBtn").onclick = async () => {
-  if (usbPort) { try { await usbPort.close(); } catch (e) {} return; }
+  if (usbPort) {
+    try { await usbSend("set log 0"); } catch (e) {}
+    try { await usbPort.close(); } catch (e) {}
+    return;
+  }
   if (!("serial" in navigator)) { $("usbState").innerHTML = '<span class="err">このブラウザはWebSerial非対応です (Chrome/Edgeを使用)</span>'; return; }
   try {
     usbPort = await navigator.serial.requestPort();
@@ -300,7 +322,16 @@ $("usbBtn").onclick = async () => {
     usbReadLoop(usbPort.readable.getReader());
     $("usbBtn").textContent = "切断";
     $("usbState").textContent = "接続しました。現在値を取得中...";
+    $("logToggle").disabled = false;
+    usbGotReply = false;
     await usbSend("get");
+    setTimeout(() => {
+      if (!usbGotReply && usbPort) {
+        $("usbState").innerHTML = '<span class="err">応答がありません。①「切断」して再接続し、'
+          + '<b>別の「USB シリアル デバイス」</b>を選んでください（Studio用と設定用の2ポートがあります）'
+          + ' ②それでもダメなら今日以降のファームを書き込んでください (.\\flash-cornix.ps1)</span>';
+      }
+    }, 2500);
   } catch (e) {
     usbPort = null; usbWriter = null;
     $("usbState").innerHTML = '<span class="err">接続失敗: ' + e.message + "</span>";
@@ -313,6 +344,12 @@ $("timeoutNum").addEventListener("change", () => usbSend("set timeout " + $("tim
 $("rangePct").addEventListener("change", () => usbSend("set range " + $("rangePct").value));
 $("rangePctNum").addEventListener("change", () => usbSend("set range " + $("rangePctNum").value));
 $("continuous").addEventListener("change", () => usbSend("set cont " + ($("continuous").checked ? 1 : 0)));
+$("logToggle").addEventListener("change", () => {
+  const on = $("logToggle").checked;
+  $("usbLog").style.display = on ? "block" : "none";
+  if (on) $("usbLog").textContent = "";
+  usbSend("set log " + (on ? 1 : 0));
+});
 
 $("saveBtn").onclick = async () => {
   const btn = $("saveBtn");
