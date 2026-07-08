@@ -262,7 +262,25 @@ async function saveBranch(branch, summary) {
 }
 
 // ---- USB直結モード (WebSerial) ----
-let usbPort = null, usbWriter = null, usbBuf = "", usbGotReply = false;
+let usbPort = null, usbWriter = null, usbReader = null, usbBuf = "", usbGotReply = false;
+
+function usbResetUi(msg) {
+  usbPort = null; usbWriter = null; usbReader = null;
+  $("usbBtn").textContent = "USBで接続";
+  $("usbState").textContent = msg || "切断されました";
+  $("logToggle").disabled = true;
+  $("logToggle").checked = false;
+  $("usbLog").style.display = "none";
+}
+
+async function usbDisconnect() {
+  const port = usbPort;
+  try { await usbSend("set log 0"); } catch (e) {}
+  try { if (usbReader) await usbReader.cancel(); } catch (e) {}
+  try { if (usbWriter) usbWriter.releaseLock(); } catch (e) {}
+  try { if (port) await port.close(); } catch (e) {}
+  usbResetUi();
+}
 
 async function usbSend(line) {
   if (!usbWriter) return;
@@ -280,6 +298,7 @@ function usbApplyResponse(line) {
 }
 
 async function usbReadLoop(reader) {
+  usbReader = reader;
   try {
     while (true) {
       const { value, done } = await reader.read();
@@ -300,18 +319,13 @@ async function usbReadLoop(reader) {
       }
     }
   } catch (e) { /* 切断 */ }
-  usbPort = null; usbWriter = null;
-  $("usbBtn").textContent = "USBで接続";
-  $("usbState").textContent = "切断されました";
-  $("logToggle").disabled = true;
-  $("logToggle").checked = false;
-  $("usbLog").style.display = "none";
+  try { reader.releaseLock(); } catch (e) {}
+  if (usbPort) usbResetUi();
 }
 
 $("usbBtn").onclick = async () => {
   if (usbPort) {
-    try { await usbSend("set log 0"); } catch (e) {}
-    try { await usbPort.close(); } catch (e) {}
+    await usbDisconnect();
     return;
   }
   if (!("serial" in navigator)) { $("usbState").innerHTML = '<span class="err">このブラウザはWebSerial非対応です (Chrome/Edgeを使用)</span>'; return; }
@@ -333,7 +347,7 @@ $("usbBtn").onclick = async () => {
       }
     }, 2500);
   } catch (e) {
-    usbPort = null; usbWriter = null;
+    usbResetUi("");
     $("usbState").innerHTML = '<span class="err">接続失敗: ' + e.message + "</span>";
   }
 };
