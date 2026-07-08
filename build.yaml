@@ -27,13 +27,13 @@ include:
   #   snippet: studio-rpc-usb-uart
   #   artifact-name: cornix_dongle_zds_nano
   - board: cornix_left
-    shield: cornix_indicator
+    shield: cornix_indicator cornix_nicola_cfg
     snippet: studio-rpc-usb-uart
     artifact-name: cornix_left_default_nosd
 
   # デバッグ用: USBシリアルにログを出す左手ビルド (flash-cornix.ps1 -DebugFw で書き込み)
   - board: cornix_left
-    shield: cornix_indicator
+    shield: cornix_indicator cornix_nicola_cfg
     snippet: zmk-usb-logging
     artifact-name: cornix_left_debug_nosd
 

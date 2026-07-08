@@ -56,7 +56,18 @@
   GitHubにコミットされ自動ビルドが走ります（約2.5分）。あとはPCで <code>.\flash-cornix.ps1</code> を実行するだけ。</p>
 
   <div class="card">
-    <h2>接続設定（初回のみ）</h2>
+    <h2>⚡ USB直結モード（ビルド・書き込み不要）</h2>
+    <div class="row">
+      <button class="primary" id="usbBtn">USBで接続</button>
+      <span id="usbState" class="hint">左手をUSBケーブルで接続してからどうぞ（Chrome/Edge）</span>
+    </div>
+    <p class="hint">接続中はスライダーを動かすと<b>その場でキーボードに反映・保存</b>されます
+    （判定窓/判定範囲/連続シフトのみ。親指キーの変更はGitHubモードで）。
+    2026-07-08以降のファームが必要です。</p>
+  </div>
+
+  <div class="card">
+    <h2>接続設定（GitHubモード・初回のみ）</h2>
     <div class="row">
       <input type="password" id="token" placeholder="GitHub Personal Access Token">
       <button class="ghost" id="loadBtn">現在の設定を読み込む</button>
@@ -240,6 +251,68 @@ async function saveBranch(branch, summary) {
   });
   return "コミット完了";
 }
+
+// ---- USB直結モード (WebSerial) ----
+let usbPort = null, usbWriter = null, usbBuf = "";
+
+async function usbSend(line) {
+  if (!usbWriter) return;
+  await usbWriter.write(new TextEncoder().encode(line + "\n"));
+}
+
+function usbApplyResponse(line) {
+  // "ok timeout=50 range=-1 cont=0"
+  const m = line.match(/timeout=(-?\d+) range=(-?\d+) cont=([01])/);
+  if (!m) return;
+  if (m[1] !== "-1") { $("timeout").value = m[1]; $("timeout").oninput(); }
+  if (m[2] !== "-1") { $("rangePct").value = m[2]; $("rangePct").oninput(); }
+  $("continuous").checked = m[3] === "1";
+  $("usbState").innerHTML = '<span class="ok">✅ 反映・保存済み: ' + line.replace(/^ok /, "") + "</span>";
+}
+
+async function usbReadLoop(reader) {
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      usbBuf += new TextDecoder().decode(value);
+      let nl;
+      while ((nl = usbBuf.indexOf("\n")) >= 0) {
+        const line = usbBuf.slice(0, nl).trim();
+        usbBuf = usbBuf.slice(nl + 1);
+        if (line.startsWith("ok")) usbApplyResponse(line);
+        else if (line.startsWith("err")) $("usbState").innerHTML = '<span class="err">' + line + "</span>";
+      }
+    }
+  } catch (e) { /* 切断 */ }
+  usbPort = null; usbWriter = null;
+  $("usbBtn").textContent = "USBで接続";
+  $("usbState").textContent = "切断されました";
+}
+
+$("usbBtn").onclick = async () => {
+  if (usbPort) { try { await usbPort.close(); } catch (e) {} return; }
+  if (!("serial" in navigator)) { $("usbState").innerHTML = '<span class="err">このブラウザはWebSerial非対応です (Chrome/Edgeを使用)</span>'; return; }
+  try {
+    usbPort = await navigator.serial.requestPort();
+    await usbPort.open({ baudRate: 115200 });
+    usbWriter = usbPort.writable.getWriter();
+    usbReadLoop(usbPort.readable.getReader());
+    $("usbBtn").textContent = "切断";
+    $("usbState").textContent = "接続しました。現在値を取得中...";
+    await usbSend("get");
+  } catch (e) {
+    usbPort = null; usbWriter = null;
+    $("usbState").innerHTML = '<span class="err">接続失敗: ' + e.message + "</span>";
+  }
+};
+
+// USB接続中はコントロール変更を即送信
+$("timeout").addEventListener("change", () => usbSend("set timeout " + $("timeout").value));
+$("timeoutNum").addEventListener("change", () => usbSend("set timeout " + $("timeoutNum").value));
+$("rangePct").addEventListener("change", () => usbSend("set range " + $("rangePct").value));
+$("rangePctNum").addEventListener("change", () => usbSend("set range " + $("rangePctNum").value));
+$("continuous").addEventListener("change", () => usbSend("set cont " + ($("continuous").checked ? 1 : 0)));
 
 $("saveBtn").onclick = async () => {
   const btn = $("saveBtn");
