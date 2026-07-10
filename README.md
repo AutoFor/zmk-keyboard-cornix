@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> このリポジトリは 2026-07-10 に [AutoFor/cornix-oyayubi](https://github.com/AutoFor/cornix-oyayubi) へ統合されました（履歴ごと移設済み）。以後の開発はそちらで行われます。
+
 # ZMK Keyboard for Cornix
 
 ## Introduction to Boards and Shields
